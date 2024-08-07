@@ -5,18 +5,13 @@ Mouse Jiggler is a very simple piece of software whose sole function is to "fake
 
 Useful for avoiding screensavers or other things triggered by idle detection that, for whatever reason, you can't turn off any other way; or as a quick way to stop a screensaver activating during an installation or when monitoring a long operation without actually having to muck about with the screensaver settings.
 
-Installation
-============
+What's custmized
+----------------
 
-The easiest means of installing Mouse Jiggler is using Chocolatey:
-
-`choco install mouse-jiggler`
-
-Bare releases continue to be available at right for installation without administrative permissions, although the .NET 5 Desktop runtime must be installed first.
-
-Please note that due to a compatibility issue with the Chocolatey shims, running Mouse Jiggler via the shim does not display command-line help or the Mouse Jiggler version when the -h/--help/-? or --version switches are used. To do so, Mouse Jiggler must be invoked directly. To easily discover the location of the original Mouse Jiggler executable for this purpose, run:
-
-`mousejiggler --shimgen-log`
+- Some caption changed.
+- More GUI settings.
+  - Jigging on start option.
+  - Time schedule option.
 
 Portable Version
 ----------------
@@ -54,11 +49,6 @@ Options:
 ```
 
 The `-j` command-line switch tells Mouse Jiggler to commence jiggling immediately on startup.
-
-Bugs
-====
-
-When installed using Chocolatey, command-line help may not be displayed properly. See "installation" above.
 
 Features That Will Not Be Implemented
 =====================================
