@@ -58,10 +58,10 @@ namespace ArkaneSystems.MouseJiggler
             columnHeader2 = new System.Windows.Forms.ColumnHeader();
             rbSchedule = new System.Windows.Forms.RadioButton();
             rbEverytime = new System.Windows.Forms.RadioButton();
-            niTray = new System.Windows.Forms.NotifyIcon(components);
             tabPage3 = new System.Windows.Forms.TabPage();
-            lbOutOfSchedule = new System.Windows.Forms.Label();
             label4 = new System.Windows.Forms.Label();
+            lbOutOfSchedule = new System.Windows.Forms.Label();
+            niTray = new System.Windows.Forms.NotifyIcon(components);
             flpLayout.SuspendLayout();
             panelBase.SuspendLayout();
             tabControl1.SuspendLayout();
@@ -360,12 +360,6 @@ namespace ArkaneSystems.MouseJiggler
             rbEverytime.UseVisualStyleBackColor = true;
             rbEverytime.Click += radioButton2_Click;
             // 
-            // niTray
-            // 
-            niTray.Icon = (System.Drawing.Icon)resources.GetObject("niTray.Icon");
-            niTray.Text = "Mouse Jiggler";
-            niTray.DoubleClick += niTray_DoubleClick;
-            // 
             // tabPage3
             // 
             tabPage3.Controls.Add(label4);
@@ -378,15 +372,6 @@ namespace ArkaneSystems.MouseJiggler
             tabPage3.Text = "Status";
             tabPage3.UseVisualStyleBackColor = true;
             // 
-            // lbOutOfSchedule
-            // 
-            lbOutOfSchedule.AutoSize = true;
-            lbOutOfSchedule.Location = new System.Drawing.Point(114, 13);
-            lbOutOfSchedule.Name = "lbOutOfSchedule";
-            lbOutOfSchedule.Size = new System.Drawing.Size(99, 15);
-            lbOutOfSchedule.TabIndex = 10;
-            lbOutOfSchedule.Text = "[Out of schedule]";
-            // 
             // label4
             // 
             label4.AutoSize = true;
@@ -395,6 +380,21 @@ namespace ArkaneSystems.MouseJiggler
             label4.Size = new System.Drawing.Size(90, 15);
             label4.TabIndex = 11;
             label4.Text = "Schedule Status";
+            // 
+            // lbOutOfSchedule
+            // 
+            lbOutOfSchedule.AutoSize = true;
+            lbOutOfSchedule.Location = new System.Drawing.Point(114, 13);
+            lbOutOfSchedule.Name = "lbOutOfSchedule";
+            lbOutOfSchedule.Size = new System.Drawing.Size(22, 15);
+            lbOutOfSchedule.TabIndex = 10;
+            lbOutOfSchedule.Text = "---";
+            // 
+            // niTray
+            // 
+            niTray.Icon = (System.Drawing.Icon)resources.GetObject("niTray.Icon");
+            niTray.Text = "Mouse Jiggler";
+            niTray.DoubleClick += niTray_DoubleClick;
             // 
             // MainForm
             // 
