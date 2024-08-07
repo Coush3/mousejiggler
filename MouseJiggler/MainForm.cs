@@ -9,6 +9,8 @@
 #region using
 
 using System;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Windows.Forms;
 
 using ArkaneSystems.MouseJiggler.Properties;
@@ -22,13 +24,13 @@ namespace ArkaneSystems.MouseJiggler
         /// <summary>
         ///     Constructor for use by the form designer.
         /// </summary>
-        public MainForm ()
-            : this (jiggleOnStartup: false, minimizeOnStartup: false, zenJiggleEnabled: false, jigglePeriod: 1)
+        public MainForm()
+            : this(jiggleOnStartup: false, minimizeOnStartup: false, zenJiggleEnabled: false, jigglePeriod: 1)
         { }
 
-        public MainForm (bool jiggleOnStartup, bool minimizeOnStartup, bool zenJiggleEnabled, int jigglePeriod)
+        public MainForm(bool jiggleOnStartup, bool minimizeOnStartup, bool zenJiggleEnabled, int jigglePeriod)
         {
-            this.InitializeComponent ();
+            this.InitializeComponent();
 
             // Jiggling on startup?
             this.JiggleOnStartup = jiggleOnStartup;
@@ -37,19 +39,38 @@ namespace ArkaneSystems.MouseJiggler
             // We do this by setting the controls, and letting them set the properties.
 
             this.cbMinimize.Checked = minimizeOnStartup;
-            this.cbZen.Checked      = zenJiggleEnabled;
-            this.tbPeriod.Value     = jigglePeriod;
+            this.cbZen.Checked = zenJiggleEnabled;
+            this.tbPeriod.Value = jigglePeriod;
+
+            cbStartup.Checked = Settings.Default.JiggingOnStart;
+
+            if (Settings.Default.JiggingEverytime) { rbEverytime.Checked = true; }
+            else { rbSchedule.Checked = true; }
+
+            foreach(string s in  Settings.Default.JiggingSchedule.Split(" "))
+            {
+                if (s == "") break;
+                var v = s.Split("-");
+                if (v.Length != 3) break;
+                var i=new ListViewItem(v[1]);
+                i.SubItems.Add(v[2]);
+                i.Checked = v[0] == "1";
+                lv.Items.Add(i);
+            }
+
         }
 
         public bool JiggleOnStartup { get; }
 
-        private void MainForm_Load (object sender, EventArgs e)
+        private void MainForm_Load(object sender, EventArgs e)
         {
-            if (this.JiggleOnStartup)
+            if (this.JiggleOnStartup || cbStartup.Checked)
                 this.cbJiggling.Checked = true;
+
+
         }
 
-        private void UpdateNotificationAreaText ()
+        private void UpdateNotificationAreaText()
         {
             if (!this.cbJiggling.Checked)
             {
@@ -62,29 +83,34 @@ namespace ArkaneSystems.MouseJiggler
             }
         }
 
-        private void cmdAbout_Click (object sender, EventArgs e)
+        private void cmdAbout_Click(object sender, EventArgs e)
         {
-            new AboutBox ().ShowDialog (owner: this);
+            new AboutBox().ShowDialog(owner: this);
         }
 
         #region Property synchronization
 
-        private void cbSettings_CheckedChanged (object sender, EventArgs e)
+        private void cbSettings_CheckedChanged(object sender, EventArgs e)
         {
-            this.panelSettings.Visible = this.cbSettings.Checked;
+            //this.panelSettings.Visible = this.cbSettings.Checked;
+            this.tabControl1.Visible = !this.tabControl1.Visible;
         }
 
-        private void cbMinimize_CheckedChanged (object sender, EventArgs e)
+        private void cbMinimize_CheckedChanged(object sender, EventArgs e)
         {
             this.MinimizeOnStartup = this.cbMinimize.Checked;
         }
 
-        private void cbZen_CheckedChanged (object sender, EventArgs e)
+        private void cbZen_CheckedChanged(object sender, EventArgs e)
         {
             this.ZenJiggleEnabled = this.cbZen.Checked;
         }
-
-        private void tbPeriod_ValueChanged (object sender, EventArgs e)
+        private void checkBox1_Click(object sender, EventArgs e)
+        {
+            Settings.Default.JiggingOnStart = cbStartup.Checked;
+            Settings.Default.Save();
+        }
+        private void tbPeriod_ValueChanged(object sender, EventArgs e)
         {
             this.JigglePeriod = this.tbPeriod.Value;
         }
@@ -95,19 +121,56 @@ namespace ArkaneSystems.MouseJiggler
 
         protected bool Zig = true;
 
-        private void cbJiggling_CheckedChanged (object sender, EventArgs e)
+        private void cbJiggling_CheckedChanged(object sender, EventArgs e)
         {
             this.jiggleTimer.Enabled = this.cbJiggling.Checked;
         }
 
-        private void jiggleTimer_Tick (object sender, EventArgs e)
+        private void jiggleTimer_Tick(object sender, EventArgs e)
         {
+            bool b = false;
+            if (rbSchedule.Checked)
+            {
+                foreach (ListViewItem i in lv.Items)
+                {
+                    if (!i.Checked) continue;
+
+                    var t1 = DateTime.Parse(i.SubItems[0].Text + ":00").TimeOfDay;
+                    var t2 = DateTime.Parse(i.SubItems[1].Text + ":00").TimeOfDay;
+                    var tn = DateTime.Now.TimeOfDay;
+                    if (t1 <= t2)
+                    {
+                        if (tn >= t1 && tn <= t2)
+                        {
+                            b = true;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        if (tn >= t2 || tn <= t1)
+                        {
+                            b = true;
+                            break;
+                        }
+                    }
+                }
+                lbOutOfSchedule.Text = b ? "In schedule" : "Out schedule";
+            }
+            else
+            {
+                lbOutOfSchedule.Text = "Everytime jiggle";
+                b = true;
+            }
+
+            if (!b) return;
+
             if (this.ZenJiggleEnabled)
-                Helpers.Jiggle (delta: 0);
+                Helpers.Jiggle(delta: 0);
             else if (this.Zig)
-                Helpers.Jiggle (delta: 4);
+                Helpers.Jiggle(delta: 4);
             else //zag
-                Helpers.Jiggle (delta: -4);
+                Helpers.Jiggle(delta: -4);
 
             this.Zig = !this.Zig;
         }
@@ -116,29 +179,29 @@ namespace ArkaneSystems.MouseJiggler
 
         #region Minimize and restore
 
-        private void cmdTrayify_Click (object sender, EventArgs e)
+        private void cmdTrayify_Click(object sender, EventArgs e)
         {
-            this.MinimizeToTray ();
+            this.MinimizeToTray();
         }
 
-        private void niTray_DoubleClick (object sender, EventArgs e)
+        private void niTray_DoubleClick(object sender, EventArgs e)
         {
-            this.RestoreFromTray ();
+            this.RestoreFromTray();
         }
 
-        private void MinimizeToTray ()
+        private void MinimizeToTray()
         {
-            this.Visible        = false;
-            this.ShowInTaskbar  = false;
+            this.Visible = false;
+            this.ShowInTaskbar = false;
             this.niTray.Visible = true;
 
-            this.UpdateNotificationAreaText ();
+            this.UpdateNotificationAreaText();
         }
 
-        private void RestoreFromTray ()
+        private void RestoreFromTray()
         {
-            this.Visible        = true;
-            this.ShowInTaskbar  = true;
+            this.Visible = true;
+            this.ShowInTaskbar = true;
             this.niTray.Visible = false;
         }
 
@@ -161,9 +224,9 @@ namespace ArkaneSystems.MouseJiggler
             get => this.minimizeOnStartup;
             set
             {
-                this.minimizeOnStartup             = value;
+                this.minimizeOnStartup = value;
                 Settings.Default.MinimizeOnStartup = value;
-                Settings.Default.Save ();
+                Settings.Default.Save();
             }
         }
 
@@ -172,9 +235,9 @@ namespace ArkaneSystems.MouseJiggler
             get => this.zenJiggleEnabled;
             set
             {
-                this.zenJiggleEnabled      = value;
+                this.zenJiggleEnabled = value;
                 Settings.Default.ZenJiggle = value;
-                Settings.Default.Save ();
+                Settings.Default.Save();
             }
         }
 
@@ -183,12 +246,12 @@ namespace ArkaneSystems.MouseJiggler
             get => this.jigglePeriod;
             set
             {
-                this.jigglePeriod             = value;
+                this.jigglePeriod = value;
                 Settings.Default.JigglePeriod = value;
-                Settings.Default.Save ();
+                Settings.Default.Save();
 
                 this.jiggleTimer.Interval = value * 1000;
-                this.lbPeriod.Text        = $"{value} s";
+                this.lbPeriod.Text = $"{value} s";
             }
         }
 
@@ -198,14 +261,68 @@ namespace ArkaneSystems.MouseJiggler
 
         private bool firstShown = true;
 
-        private void MainForm_Shown (object sender, EventArgs e)
+        private void MainForm_Shown(object sender, EventArgs e)
         {
             if (this.firstShown && this.MinimizeOnStartup)
-                this.MinimizeToTray ();
+                this.MinimizeToTray();
 
             this.firstShown = false;
         }
 
         #endregion
+
+        /// <summary>
+        /// Add Schedule
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button2_Click(object sender, EventArgs e)
+        {
+            var i = new ListViewItem(new string[] {
+                dtBegin.Value. ToString("HH:mm")
+                ,dtEnd.Value.ToString("HH:mm")
+            });
+            i.Checked = true;
+            lv.Items.Add(i);
+            SaveShedule();
+        }
+
+        /// <summary>
+        /// Remove selected schedule
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void button3_Click(object sender, EventArgs e)
+        {
+            while (lv.SelectedItems.Count > 0)
+            {
+                lv.Items.Remove(lv.SelectedItems[0]);
+            }
+            SaveShedule();
+        }
+
+        private void SaveShedule()
+        {
+            var sb = new StringBuilder();
+            foreach (ListViewItem i in lv.Items)
+            {
+                sb.Append($"{(i.Checked ? "1" : "0")}-{i.SubItems[0].Text}-{i.SubItems[1].Text} ");
+            }
+            Settings.Default.JiggingSchedule = sb.ToString().Trim();
+            Settings.Default.Save();
+        }
+
+        /// <summary>
+        /// Change Schedure Enabled
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void radioButton2_Click(object sender, EventArgs e)
+        {
+            Settings.Default.JiggingEverytime = rbEverytime.Checked;
+            Settings.Default.Save();
+        }
+
+
     }
 }
