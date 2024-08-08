@@ -13,6 +13,8 @@ What's custmized
   - Jigging on start option.
   - Time schedule option.
 
+![Settings](Settings.png)![Schedule](Schedule.png)
+
 Portable Version
 ----------------
 
